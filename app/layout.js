@@ -1,0 +1,33 @@
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+})
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-jakarta',
+  weight: ['500', '600', '700', '800'],
+})
+
+export const metadata = {
+  title: 'Deviate',
+  description: 'AI contract review platform for Indian corporate law firms',
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/favicon-16x16.png',
+    apple: '/apple-touch-icon.png',
+  },
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${jakarta.variable}`}>
+      <body className={inter.className}>{children}</body>
+    </html>
+  )
+}
