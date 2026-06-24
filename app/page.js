@@ -686,7 +686,7 @@ function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskF
         <table className={`min-w-full divide-y divide-[var(--border)] text-left text-sm`}>
           <thead>
             <tr className={`bg-[var(--bg-card-alt)]`}>
-              {['#', 'Clause', 'Term Sheet Position', 'Received Draft', 'Risk', 'Explanation', 'Our Position', 'Suggested Response'].map((h) => (
+              {['#', 'Clause', 'Term Sheet Position', 'Received Draft', 'Risk', 'Explanation', 'Suggested Response (from Playbook)'].map((h) => (
                 <th key={h} className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-widest ${tc.textMuted}`}>{h}</th>
               ))}
             </tr>
@@ -705,11 +705,17 @@ function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskF
                 <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.receivedDraftPosition)}</td>
                 <td className="px-5 py-4 align-top"><RiskBadge level={d.riskLevel} /></td>
                 <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.explanation || 'No explanation provided', 140)}</td>
-                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.playbookPosition || 'No position available', 140)}</td>
-                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>
+                <td className={`px-5 py-4 align-top`}>
                   {isValidSuggestedResponse(d.suggestedResponse) ? (
                     <div className="space-y-2">
-                      <p>{abstractText(d.suggestedResponse, 140)}</p>
+                      {d.playbookPosition && d.playbookPosition !== 'No playbook entry configured yet' && (
+                        <div className="mb-2">
+                          <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${tc.textMuted}`}>Our position</p>
+                          <p className={`text-xs ${tc.textSec}`}>{abstractText(d.playbookPosition, 120)}</p>
+                        </div>
+                      )}
+                      <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 text-[#1DB954]`}>Suggested response</p>
+                      <p className={`text-xs ${tc.textSec}`}>{abstractText(d.suggestedResponse, 160)}</p>
                       <button
                         type="button"
                         onClick={() => handleCopy(i, d.suggestedResponse)}
@@ -723,7 +729,7 @@ function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskF
                       </button>
                     </div>
                   ) : (
-                    <p className={`text-xs italic ${tc.textMuted}`}>No response configured</p>
+                    <p className={`text-xs italic ${tc.textMuted}`}>No Playbook entry configured for this clause</p>
                   )}
                 </td>
               </tr>
@@ -1947,6 +1953,19 @@ export default function Home() {
                         {exportMessage && <p className="text-xs text-[#1DB954]">{exportMessage}</p>}
                       </div>
                     </div>
+
+                    {/* Playbook hint */}
+                    {detailResult.deviations.length > 0 && (
+                      <div className="flex items-start gap-3 rounded-2xl border border-[#FF6719]/20 bg-[#FF6719]/5 px-4 py-3">
+                        <span className="text-base mt-0.5">⚠️</span>
+                        <p className="text-xs leading-relaxed">
+                          <span className="font-bold text-[#FF6719]">No suggested response on a row?</span>
+                          <span className={`${tc.textSec}`}> That clause has not been configured in your Playbook yet. </span>
+                          <a href="/playbook" className="font-semibold text-[#FF6719] underline underline-offset-2 hover:text-[#FF6719]/80 transition-colors">Open Playbook</a>
+                          <span className={`${tc.textSec}`}> to add a position and suggested response for it.</span>
+                        </p>
+                      </div>
+                    )}
 
                     {detailResult.deviations.length === 0 ? (
                       <div className="rounded-3xl border border-[#1DB954]/20 bg-[#1DB954]/5 p-12 text-center">
