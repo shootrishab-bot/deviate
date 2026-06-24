@@ -1032,7 +1032,7 @@ const GUIDE_STEPS = [
     number: '01',
     title: 'Upload Your Documents',
     description: "Upload your firm's original document (term sheet, NDA, or agreement) and the counterparty's marked-up version. Deviate accepts PDF and DOCX files. You may upload multiple documents on each side simultaneously — for instance, all documents in a matter at once.",
-    detail: "Supported formats: PDF (text-based) and DOCX. Scanned PDFs without embedded text may produce incomplete results. For best accuracy, use text-searchable PDFs or Word documents.",
+    detail: "Supported formats: PDF (text-based) and DOCX. Redlined DOCX files with pending tracked changes are supported natively and do not need to be accepted before upload. If uploading a PDF of a redlined document, export it with revisions accepted rather than with markup visible, as strikethroughs and insertion marks in a PDF are read as plain text and will confuse the analysis. Scanned PDFs without embedded text may produce incomplete results.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
