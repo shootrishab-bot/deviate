@@ -797,9 +797,197 @@ function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskF
 
 
 
+
+// ─── About Modal ─────────────────────────────────────────────────────────────
+
+function AboutModal({ onClose }) {
+  const [activeTab, setActiveTab] = useState('about')
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className={`w-full max-w-lg h-[95vh] sm:max-h-[80vh] sm:h-auto flex flex-col rounded-3xl border shadow-2xl animate-scale-in ${tc.card}`}
+      >
+        {/* Header */}
+        <div className={`flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6 border-b border-[var(--border)] flex-shrink-0`}>
+          <div>
+            <p className={`text-lg font-bold tracking-tight ${tc.text}`}>Deviate</p>
+            <p className={`text-xs mt-0.5 ${tc.textMuted}`}>Built by a lawyer, for lawyers</p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className={`h-8 w-8 flex items-center justify-center rounded-full text-lg transition-all hover:bg-[#FF4444]/10 hover:text-[#FF4444] ${tc.textMuted}`}
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 px-5 sm:px-8 pt-4 flex-shrink-0">
+          {[
+            { key: 'about',   label: 'About' },
+            { key: 'contact', label: 'Contact' },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setActiveTab(key)}
+              className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                activeTab === key
+                  ? 'bg-gradient-to-r from-[#1DB954] to-[#169C46] text-white shadow-lg shadow-green-900/20'
+                  : `border ${tc.card} ${tc.textMuted} hover:text-[#1DB954] border-[var(--border)]`
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto flex-1 px-5 sm:px-8 py-5 sm:py-6 space-y-4">
+
+          {/* ABOUT TAB */}
+          {activeTab === 'about' && (
+            <div className="space-y-4">
+              {/* Bio card */}
+              <div className={`rounded-2xl border p-5 bg-[var(--bg-card-alt)] border-[var(--border)]`}>
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-[#1DB954]/10">
+                    <span className="text-xl font-extrabold text-[#1DB954]">R</span>
+                  </div>
+                  <div>
+                    <p className={`text-base font-bold ${tc.text}`}>Rishab Ramakrishna</p>
+                    <p className={`text-xs mt-0.5 ${tc.textMuted}`}>B.B.A. LL.B. (Hons.) — Jindal Global Law School</p>
+                    <p className={`text-xs mt-0.5 text-[#1DB954]`}>Technology Law · Data Privacy · Commercial Contracts</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Story */}
+              <div className={`rounded-2xl border p-5 bg-[var(--bg-card-alt)] border-[var(--border)]`}>
+                <p className={`text-sm font-bold mb-2 ${tc.text}`}>Why Deviate?</p>
+                <p className={`text-xs leading-relaxed ${tc.textSec}`}>
+                  Contract review is one of the most time-intensive tasks in any commercial practice. During internships across corporate and fintech teams, the process was the same everywhere: open both documents, scroll line by line, manually flag differences, then draft a response from scratch. A task that consumed hours of a junior associate&apos;s time, every single time, for output that followed the same structure regardless of who did it.
+                </p>
+                <p className={`text-xs leading-relaxed mt-2 ${tc.textSec}`}>
+                  Deviate was built to close that gap. It reads the legal meaning behind each change, not just the words, maps every deviation to a risk level, and surfaces your firm&apos;s standard negotiation position automatically. What previously took hours now takes under a minute, whether you are a first-year associate or a senior partner reviewing a counterparty&apos;s markup.
+                </p>
+                <p className={`text-xs leading-relaxed mt-2 ${tc.textSec}`}>
+                  This is my first legal tech project. A second tool is currently in development and will be deployed very soon.
+                </p>
+              </div>
+
+              {/* Background */}
+              <div className={`rounded-2xl border p-5 bg-[var(--bg-card-alt)] border-[var(--border)]`}>
+                <p className={`text-sm font-bold mb-3 ${tc.text}`}>Background</p>
+                <div className="space-y-2.5">
+                  {[
+                    { org: 'TLP Advisors', role: 'Technology Law — UAE', detail: 'Virtual asset licensing, AML/CFT compliance, governance policy drafting' },
+                    { org: 'Zepto', role: 'Contracts Team — Bangalore', detail: 'High-volume commercial contract review, risk flagging, bespoke clause drafting' },
+                    { org: 'Khaitan & Co.', role: 'Banking & Fintech — Bangalore', detail: 'RBI regulatory compliance, cross-border fintech, payment orchestration analysis' },
+                    { org: 'MD&T Partners', role: 'Corporate — Bangalore', detail: 'Share allotments, Section 8 incorporation, CCI merger thresholds' },
+                  ].map(({ org, role, detail }) => (
+                    <div key={org} className={`flex gap-3 pb-2.5 border-b border-[var(--border)] last:border-0 last:pb-0`}>
+                      <div className="flex-shrink-0 mt-0.5 h-1.5 w-1.5 rounded-full bg-[#1DB954] mt-1.5" />
+                      <div>
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          <span className={`text-xs font-bold ${tc.text}`}>{org}</span>
+                          <span className={`text-[10px] ${tc.textMuted}`}>{role}</span>
+                        </div>
+                        <p className={`text-[11px] mt-0.5 ${tc.textMuted}`}>{detail}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Publications */}
+              <div className={`rounded-2xl border p-5 bg-[var(--bg-card-alt)] border-[var(--border)]`}>
+                <p className={`text-sm font-bold mb-2 ${tc.text}`}>Research &amp; Publications</p>
+                <div className="space-y-2">
+                  {[
+                    '"Beyond Privacy: Framing Coercive Data Collection as Antitrust Harm in CCI v. Meta Platforms" — Indian Journal for Law and Legal Research',
+                    'Virtual Asset Regulation Report on Digital Asset Classification under the FIT21 Act — distributed to industry stakeholders and high capital investors via PYOR',
+                  ].map((pub, i) => (
+                    <div key={i} className="flex gap-2">
+                      <span className="flex-shrink-0 text-[#1DB954] text-xs mt-0.5">◆</span>
+                      <p className={`text-xs leading-relaxed ${tc.textSec}`}>{pub}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* CONTACT TAB */}
+          {activeTab === 'contact' && (
+            <div className="space-y-4">
+              <div className={`rounded-2xl border p-5 bg-[var(--bg-card-alt)] border-[var(--border)]`}>
+                <p className={`text-sm font-bold mb-1 ${tc.text}`}>Get in touch</p>
+                <p className={`text-xs leading-relaxed ${tc.textSec}`}>
+                  For enquiries about Deviate, access requests, feedback, or collaboration, reach out directly. Response time is typically within 24 hours.
+                </p>
+              </div>
+
+              {/* Contact links */}
+              <div className="space-y-3">
+                <a
+                  href="mailto:rishabrsid@gmail.com"
+                  className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-200 hover:border-[#1DB954]/30 hover:bg-[#1DB954]/[0.03] group bg-[var(--bg-card-alt)] border-[var(--border)]`}
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#1DB954]/10 group-hover:bg-[#1DB954]/20 transition-colors">
+                    <svg className="h-5 w-5 text-[#1DB954]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-widest ${tc.textMuted}`}>Email</p>
+                    <p className={`text-sm font-medium mt-0.5 ${tc.text}`}>rishabrsid@gmail.com</p>
+                  </div>
+                  <svg className={`h-4 w-4 ml-auto ${tc.textMuted} group-hover:text-[#1DB954] transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </a>
+
+                <a
+                  href="https://www.linkedin.com/in/rishab-ramakrishna-ab3b46228/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-4 rounded-2xl border p-4 transition-all duration-200 hover:border-[#0A66C2]/30 hover:bg-[#0A66C2]/[0.03] group bg-[var(--bg-card-alt)] border-[var(--border)]`}
+                >
+                  <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#0A66C2]/10 group-hover:bg-[#0A66C2]/20 transition-colors">
+                    <svg className="h-5 w-5 text-[#0A66C2]" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <p className={`text-xs font-semibold uppercase tracking-widest ${tc.textMuted}`}>LinkedIn</p>
+                    <p className={`text-sm font-medium mt-0.5 ${tc.text}`}>Rishab Ramakrishna</p>
+                  </div>
+                  <svg className={`h-4 w-4 ml-auto ${tc.textMuted} group-hover:text-[#0A66C2] transition-colors`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                </a>
+              </div>
+
+              <div className={`rounded-2xl border p-4 border-[#1DB954]/20 bg-[#1DB954]/5`}>
+                <p className={`text-xs leading-relaxed text-[#1DB954]/80`}>
+                  Deviate is currently in active development. Feedback from legal professionals on accuracy, workflow fit, and feature requests is especially welcome.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // ─── Mobile Menu ──────────────────────────────────────────────────────────────
 
-function MobileMenu({ dark, phase, onNewAnalysis, onReviews, onGuide }) {
+function MobileMenu({ dark, phase, onNewAnalysis, onReviews, onGuide, onAbout }) {
   const [open, setOpen] = useState(false)
   return (
     <div className="relative md:hidden">
@@ -823,6 +1011,7 @@ function MobileMenu({ dark, phase, onNewAnalysis, onReviews, onGuide }) {
             { label: 'My Reviews',   action: () => { onReviews();    setOpen(false) } },
             { label: 'Playbook',     href: '/playbook' },
             { label: 'How it works', action: () => { onGuide();      setOpen(false) } },
+            { label: 'About',        action: () => { onAbout();      setOpen(false) } },
           ].map(({ label, action, href }) =>
             href ? (
               <a key={label} href={href} className={`block px-4 py-3 text-sm font-medium border-b border-[var(--border)] last:border-0 ${tc.textSec} hover:text-[#1DB954]`}>{label}</a>
@@ -1112,6 +1301,7 @@ export default function Home() {
   const [exportMessage, setExportMessage] = useState(null)
   const [exportPreviewResult, setExportPreviewResult] = useState(null)
   const [showGuide, setShowGuide] = useState(false)
+  const [showAbout, setShowAbout] = useState(false)
 
   const [savedBatches, setSavedBatches] = useState([])
   const [viewingBatchId, setViewingBatchId] = useState(null)
@@ -1396,6 +1586,7 @@ export default function Home() {
       )}
 
       {showGuide && <GuideModal onClose={() => setShowGuide(false)} />}
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
       {/* ── Header ── */}
       <header className={`sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl`}>
@@ -1447,6 +1638,13 @@ export default function Home() {
               >
                 How it works
               </button>
+              <button
+                type="button"
+                onClick={() => setShowAbout(true)}
+                className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${tc.textSec} hover:bg-white/5`}
+              >
+                About
+              </button>
             </div>
 
             <div className="ml-2 flex items-center gap-2">
@@ -1459,6 +1657,7 @@ export default function Home() {
                 onNewAnalysis={handleNewAnalysis}
                 onReviews={() => setPhase(PHASES.REVIEWS)}
                 onGuide={() => setShowGuide(true)}
+                onAbout={() => setShowAbout(true)}
               />
             </div>
           </nav>
@@ -1842,6 +2041,81 @@ export default function Home() {
           </section>
         )}
       </main>
+      {/* ── Footer ── */}
+      <footer className={`mt-16 border-t border-[var(--border)]`}>
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
+
+            {/* Left: branding */}
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[#1DB954] font-extrabold text-lg">◆</span>
+                <span className={`font-extrabold text-lg tracking-tight ${tc.text}`}>deviate</span>
+                <span className="rounded-full border border-[#1DB954]/30 bg-[#1DB954]/10 px-1.5 py-0.5 text-[9px] font-bold leading-none text-[#1DB954]">v1</span>
+              </div>
+              <p className={`text-xs mt-1 ${tc.textMuted}`}>AI-Powered Negotiation Risk Analysis</p>
+              <p className={`text-xs mt-0.5 ${tc.textMuted}`}>Built by Rishab Ramakrishna · JGLS &apos;26</p>
+            </div>
+
+            {/* Center: links */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { label: 'New Analysis', action: 'newAnalysis' },
+                { label: 'Playbook',     href: '/playbook' },
+                { label: 'How it works', action: 'guide' },
+                { label: 'About',        action: 'about' },
+              ].map(({ label, href, action }) =>
+                href ? (
+                  <a key={label} href={href} className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all hover:border-[#1DB954]/30 hover:text-[#1DB954] ${tc.card} ${tc.textMuted}`}>{label}</a>
+                ) : (
+                  <button
+                    key={label}
+                    type="button"
+                    onClick={() => {
+                      if (action === 'guide') setShowGuide(true)
+                      if (action === 'about') setShowAbout(true)
+                      if (action === 'newAnalysis') handleNewAnalysis()
+                    }}
+                    className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-all hover:border-[#1DB954]/30 hover:text-[#1DB954] ${tc.card} ${tc.textMuted}`}
+                  >
+                    {label}
+                  </button>
+                )
+              )}
+            </div>
+
+            {/* Right: contact */}
+            <div className="flex items-center gap-3">
+              <a
+                href="mailto:rishabrsid@gmail.com"
+                className={`flex h-9 w-9 items-center justify-center rounded-2xl border transition-all hover:border-[#1DB954]/30 hover:text-[#1DB954] ${tc.card} ${tc.textMuted}`}
+                aria-label="Email"
+              >
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+                </svg>
+              </a>
+              <a
+                href="https://www.linkedin.com/in/rishab-ramakrishna-ab3b46228/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`flex h-9 w-9 items-center justify-center rounded-2xl border transition-all hover:border-[#0A66C2]/30 hover:text-[#0A66C2] ${tc.card} ${tc.textMuted}`}
+                aria-label="LinkedIn"
+              >
+                <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                </svg>
+              </a>
+            </div>
+          </div>
+
+          {/* Bottom bar */}
+          <div className={`mt-6 pt-5 border-t border-[var(--border)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2`}>
+            <p className={`text-[11px] ${tc.textMuted}`}>© {new Date().getFullYear()} Rishab Ramakrishna. All rights reserved.</p>
+            <p className={`text-[11px] ${tc.textMuted}`}>Deviate is an AI tool. All output must be reviewed by qualified legal counsel before reliance.</p>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
