@@ -591,7 +591,7 @@ function PairingSummaryCard({ pair, onViewDetail, onExportPreview, exporting }) 
   const { doc1Name, doc2Name, summary, status, error } = pair
   return (
     <div className={`rounded-3xl border p-6 transition-all duration-300 hover:border-[#1DB954]/20 hover:shadow-xl hover:shadow-green-900/10 hover:-translate-y-1 ${tc.card}`}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4">
         <div className="min-w-0 flex-1">
           <p className={`truncate text-sm font-semibold ${tc.text}`}>{doc2Name}</p>
           <p className={`mt-0.5 truncate text-xs ${tc.textMuted}`}>compared with {doc1Name}</p>
@@ -672,65 +672,169 @@ function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskF
   }
 
   return (
-    <div className={`overflow-x-auto rounded-3xl border ${tc.card} bg-[var(--bg-input)]`}>
+    <div className="space-y-3">
       {(activeFilter || activeRiskFilter) && (
-        <p className={`px-5 pt-4 text-xs ${tc.textMuted}`}>
+        <p className={`text-xs ${tc.textMuted}`}>
           Showing {displayed.length} of {augmented.length} deviations
           {activeRiskFilter ? ` · ${activeRiskFilter} risk` : ''}
           {activeFilter ? ` · ${activeFilter} only` : ''}
         </p>
       )}
-      <table className={`min-w-full divide-y divide-[var(--border)] text-left text-sm`}>
-        <thead>
-          <tr className={`bg-[var(--bg-card-alt)]`}>
-            {['#', 'Clause', 'Term Sheet Position', 'Received Draft', 'Risk', 'Explanation', 'Our Position', 'Suggested Response'].map((h) => (
-              <th key={h} className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-widest ${tc.textMuted}`}>{h}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody className={`divide-y divide-[var(--border)]`}>
-          {displayed.map((d, i) => (
-            <tr key={`${d.clauseName}-${i}`} className="transition-colors hover:bg-[#1DB954]/[0.03]">
-              <td className={`px-5 py-4 align-top text-sm ${tc.textMuted}`}>{i + 1}</td>
-              <td className={`px-5 py-4 align-top font-semibold ${tc.text}`}>
-                <div className="flex flex-col gap-1.5">
-                  <span>{d.clauseName || '—'}</span>
-                  <TypeBadge type={d.deviationType} />
-                </div>
-              </td>
-              <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.termSheetPosition)}</td>
-              <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.receivedDraftPosition)}</td>
-              <td className="px-5 py-4 align-top"><RiskBadge level={d.riskLevel} /></td>
-              <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.explanation || 'No explanation provided', 140)}</td>
-              <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.playbookPosition || 'No position available', 140)}</td>
-              <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>
-                {isValidSuggestedResponse(d.suggestedResponse) ? (
-                  <div className="space-y-2">
-                    <p>{abstractText(d.suggestedResponse, 140)}</p>
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(i, d.suggestedResponse)}
-                      className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200 ${
-                        copiedIndex === i
-                          ? 'bg-[#1DB954]/20 text-[#1DB954] scale-95'
-                          : 'bg-[var(--bg-card-alt)] text-[var(--text-secondary)] hover:bg-[#1DB954]/10 hover:text-[#1DB954]'
-                      }`}
-                    >
-                      {copiedIndex === i ? '✓ Copied' : 'Copy'}
-                    </button>
-                  </div>
-                ) : (
-                  <p className={`text-xs italic ${tc.textMuted}`}>No response configured</p>
-                )}
-              </td>
+
+      {/* ── Desktop table ── */}
+      <div className={`hidden lg:block overflow-x-auto rounded-3xl border ${tc.card} bg-[var(--bg-input)]`}>
+        <table className={`min-w-full divide-y divide-[var(--border)] text-left text-sm`}>
+          <thead>
+            <tr className={`bg-[var(--bg-card-alt)]`}>
+              {['#', 'Clause', 'Term Sheet Position', 'Received Draft', 'Risk', 'Explanation', 'Our Position', 'Suggested Response'].map((h) => (
+                <th key={h} className={`px-5 py-3.5 text-xs font-semibold uppercase tracking-widest ${tc.textMuted}`}>{h}</th>
+              ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody className={`divide-y divide-[var(--border)]`}>
+            {displayed.map((d, i) => (
+              <tr key={`${d.clauseName}-${i}`} className="transition-colors hover:bg-[#1DB954]/[0.03]">
+                <td className={`px-5 py-4 align-top text-sm ${tc.textMuted}`}>{i + 1}</td>
+                <td className={`px-5 py-4 align-top font-semibold ${tc.text}`}>
+                  <div className="flex flex-col gap-1.5">
+                    <span>{d.clauseName || '—'}</span>
+                    <TypeBadge type={d.deviationType} />
+                  </div>
+                </td>
+                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.termSheetPosition)}</td>
+                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.receivedDraftPosition)}</td>
+                <td className="px-5 py-4 align-top"><RiskBadge level={d.riskLevel} /></td>
+                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.explanation || 'No explanation provided', 140)}</td>
+                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>{abstractText(d.playbookPosition || 'No position available', 140)}</td>
+                <td className={`px-5 py-4 align-top whitespace-pre-wrap ${tc.textSec}`}>
+                  {isValidSuggestedResponse(d.suggestedResponse) ? (
+                    <div className="space-y-2">
+                      <p>{abstractText(d.suggestedResponse, 140)}</p>
+                      <button
+                        type="button"
+                        onClick={() => handleCopy(i, d.suggestedResponse)}
+                        className={`inline-flex items-center rounded-full px-4 py-1.5 text-xs font-semibold transition-all duration-200 ${
+                          copiedIndex === i
+                            ? 'bg-[#1DB954]/20 text-[#1DB954] scale-95'
+                            : 'bg-[var(--bg-card-alt)] text-[var(--text-secondary)] hover:bg-[#1DB954]/10 hover:text-[#1DB954]'
+                        }`}
+                      >
+                        {copiedIndex === i ? '✓ Copied' : 'Copy'}
+                      </button>
+                    </div>
+                  ) : (
+                    <p className={`text-xs italic ${tc.textMuted}`}>No response configured</p>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* ── Mobile cards ── */}
+      <div className="lg:hidden space-y-3">
+        {displayed.map((d, i) => (
+          <div key={`mobile-${d.clauseName}-${i}`} className={`rounded-2xl border p-4 space-y-3 ${tc.card}`}>
+            {/* Header row */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className={`text-xs font-bold ${tc.textMuted}`}>{i + 1}</span>
+                  <span className={`text-sm font-bold ${tc.text}`}>{d.clauseName || '—'}</span>
+                </div>
+                <div className="flex gap-2 mt-1.5 flex-wrap">
+                  <TypeBadge type={d.deviationType} />
+                  <RiskBadge level={d.riskLevel} />
+                </div>
+              </div>
+            </div>
+
+            {/* Position comparison */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className={`rounded-xl p-3 bg-[var(--bg-card-alt)]`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${tc.textMuted}`}>Term Sheet</p>
+                <p className={`text-xs ${tc.textSec}`}>{abstractText(d.termSheetPosition, 100)}</p>
+              </div>
+              <div className={`rounded-xl p-3 bg-[var(--bg-card-alt)]`}>
+                <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${tc.textMuted}`}>Received Draft</p>
+                <p className={`text-xs ${tc.textSec}`}>{abstractText(d.receivedDraftPosition, 100)}</p>
+              </div>
+            </div>
+
+            {/* Explanation */}
+            {d.explanation && (
+              <div>
+                <p className={`text-[10px] font-semibold uppercase tracking-widest mb-1 ${tc.textMuted}`}>Consequence</p>
+                <p className={`text-xs ${tc.textSec}`}>{abstractText(d.explanation, 160)}</p>
+              </div>
+            )}
+
+            {/* Suggested response */}
+            {isValidSuggestedResponse(d.suggestedResponse) && (
+              <div className={`rounded-xl border border-[#1DB954]/20 bg-[#1DB954]/5 p-3`}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[#1DB954] mb-1">Suggested Response</p>
+                <p className={`text-xs ${tc.textSec} mb-2`}>{abstractText(d.suggestedResponse, 160)}</p>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(i, d.suggestedResponse)}
+                  className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold transition-all duration-200 ${
+                    copiedIndex === i
+                      ? 'bg-[#1DB954]/20 text-[#1DB954]'
+                      : 'bg-[var(--bg-card-alt)] text-[var(--text-secondary)]'
+                  }`}
+                >
+                  {copiedIndex === i ? '✓ Copied' : 'Copy response'}
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
+
+
+// ─── Mobile Menu ──────────────────────────────────────────────────────────────
+
+function MobileMenu({ dark, phase, onNewAnalysis, onReviews, onGuide }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="relative md:hidden">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`flex h-9 w-9 items-center justify-center rounded-2xl border transition-all duration-200 ${tc.card}`}
+        aria-label="Menu"
+      >
+        <svg className={`h-4 w-4 ${tc.textMuted}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          {open
+            ? <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+          }
+        </svg>
+      </button>
+      {open && (
+        <div className={`absolute right-0 top-11 z-50 w-52 rounded-2xl border shadow-2xl animate-scale-in ${tc.card}`}>
+          {[
+            { label: 'New Analysis', action: () => { onNewAnalysis(); setOpen(false) } },
+            { label: 'My Reviews',   action: () => { onReviews();    setOpen(false) } },
+            { label: 'Playbook',     href: '/playbook' },
+            { label: 'How it works', action: () => { onGuide();      setOpen(false) } },
+          ].map(({ label, action, href }) =>
+            href ? (
+              <a key={label} href={href} className={`block px-4 py-3 text-sm font-medium border-b border-[var(--border)] last:border-0 ${tc.textSec} hover:text-[#1DB954]`}>{label}</a>
+            ) : (
+              <button key={label} type="button" onClick={action} className={`w-full text-left px-4 py-3 text-sm font-medium border-b border-[var(--border)] last:border-0 ${tc.textSec} hover:text-[#1DB954]`}>{label}</button>
+            )
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Guide Modal ──────────────────────────────────────────────────────────────
 
@@ -827,10 +931,10 @@ function GuideModal({ onClose }) {
     <div className="modal-backdrop" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className={`w-full max-w-2xl max-h-[88vh] flex flex-col rounded-3xl border shadow-2xl animate-scale-in ${tc.card}`}
+        className={`w-full max-w-2xl h-[95vh] sm:max-h-[88vh] sm:h-auto flex flex-col rounded-3xl border shadow-2xl animate-scale-in ${tc.card}`}
       >
         {/* Header */}
-        <div className={`flex items-center justify-between px-8 py-6 border-b border-[var(--border)] flex-shrink-0`}>
+        <div className={`flex items-center justify-between px-5 sm:px-8 py-5 sm:py-6 border-b border-[var(--border)] flex-shrink-0`}>
           <div>
             <p className={`text-lg font-bold tracking-tight ${tc.text}`}>How Deviate Works</p>
             <p className={`text-xs mt-0.5 ${tc.textMuted}`}>A guide for legal professionals</p>
@@ -845,7 +949,7 @@ function GuideModal({ onClose }) {
         </div>
 
         {/* Tabs */}
-        <div className={`flex gap-1 px-8 pt-4 flex-shrink-0`}>
+        <div className={`flex gap-1 px-5 sm:px-8 pt-4 flex-shrink-0`}>
           {[
             { key: 'walkthrough', label: 'Step-by-step guide' },
             { key: 'playbook',    label: 'The Playbook' },
@@ -867,7 +971,7 @@ function GuideModal({ onClose }) {
         </div>
 
         {/* Scrollable content */}
-        <div className="overflow-y-auto flex-1 px-8 py-6 space-y-5">
+        <div className="overflow-y-auto flex-1 px-5 sm:px-8 py-5 sm:py-6 space-y-5">
 
           {/* WALKTHROUGH TAB */}
           {activeTab === 'walkthrough' && (
@@ -1310,47 +1414,58 @@ export default function Home() {
           </button>
 
           <nav className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={handleNewAnalysis}
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                phase !== PHASES.REVIEWS ? 'text-[#1DB954]' : `${tc.textSec} hover:${tc.text} hover:bg-white/5`
-              }`}
-            >
-              New Analysis
-            </button>
-            <button
-              type="button"
-              onClick={() => setPhase(PHASES.REVIEWS)}
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
-                phase === PHASES.REVIEWS ? 'text-[#1DB954]' : `${tc.textSec} hover:bg-white/5`
-              }`}
-            >
-              My Reviews
-            </button>
-            <a
-              href="/playbook"
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${tc.textSec} hover:bg-white/5`}
-            >
-              Playbook
-            </a>
-            <button
-              type="button"
-              onClick={() => setShowGuide(true)}
-              className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${tc.textSec} hover:bg-white/5`}
-            >
-              How it works
-            </button>
+            {/* Desktop nav */}
+            <div className="hidden md:flex items-center gap-1">
+              <button
+                type="button"
+                onClick={handleNewAnalysis}
+                className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  phase !== PHASES.REVIEWS ? 'text-[#1DB954]' : `${tc.textSec} hover:bg-white/5`
+                }`}
+              >
+                New Analysis
+              </button>
+              <button
+                type="button"
+                onClick={() => setPhase(PHASES.REVIEWS)}
+                className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${
+                  phase === PHASES.REVIEWS ? 'text-[#1DB954]' : `${tc.textSec} hover:bg-white/5`
+                }`}
+              >
+                My Reviews
+              </button>
+              <a
+                href="/playbook"
+                className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${tc.textSec} hover:bg-white/5`}
+              >
+                Playbook
+              </a>
+              <button
+                type="button"
+                onClick={() => setShowGuide(true)}
+                className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 ${tc.textSec} hover:bg-white/5`}
+              >
+                How it works
+              </button>
+            </div>
 
             <div className="ml-2 flex items-center gap-2">
               <ShortcutsPanel />
               <ThemeToggle dark={dark} onToggle={toggleTheme} />
+              {/* Mobile hamburger */}
+              <MobileMenu
+                dark={dark}
+                phase={phase}
+                onNewAnalysis={handleNewAnalysis}
+                onReviews={() => setPhase(PHASES.REVIEWS)}
+                onGuide={() => setShowGuide(true)}
+              />
             </div>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
+      <main className="mx-auto max-w-7xl px-4 sm:px-6 py-5 sm:py-8">
         {showSidebar ? (
           <div className={`flex items-start gap-8 ${phase === PHASES.ANALYZING ? 'justify-center' : ''}`}>
 
@@ -1359,7 +1474,7 @@ export default function Home() {
 
               {/* UPLOAD */}
               {phase === PHASES.UPLOAD && (
-                <section className={`animate-fade-in-up space-y-6 rounded-3xl border p-8 ${tc.card}`}>
+                <section className={`animate-fade-in-up space-y-6 rounded-3xl border p-5 sm:p-8 ${tc.card}`}>
                   <div>
                     <h2 className={`text-xl font-bold ${tc.text}`}>New matter review</h2>
                     <p className={`mt-1 text-sm ${tc.textMuted}`}>Upload all documents first. You will pair them in the next step.</p>
@@ -1423,7 +1538,7 @@ export default function Home() {
 
               {/* PAIRING */}
               {phase === PHASES.PAIRING && (
-                <section className={`animate-fade-in-up space-y-5 rounded-3xl border p-8 ${tc.card}`}>
+                <section className={`animate-fade-in-up space-y-5 rounded-3xl border p-5 sm:p-8 ${tc.card}`}>
                   <div>
                     <h2 className={`text-xl font-bold ${tc.text}`}>Pair documents</h2>
                     <p className={`mt-1 text-sm ${tc.textMuted}`}>Match each firm document with its counterparty version.</p>
@@ -1499,7 +1614,7 @@ export default function Home() {
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between pt-1">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
                     <button
                       type="button"
                       onClick={() => setPhase(PHASES.UPLOAD)}
@@ -1511,9 +1626,9 @@ export default function Home() {
                       type="button"
                       onClick={handleAnalyzeAll}
                       disabled={confirmedPairs.length === 0}
-                      className="rounded-2xl bg-gradient-to-r from-[#FF6719] to-[#FF4500] px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-900/20 transition-all duration-200 hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+                      className="rounded-2xl bg-gradient-to-r from-[#FF6719] to-[#FF4500] px-5 sm:px-8 py-3 text-sm font-semibold text-white shadow-lg shadow-orange-900/20 transition-all duration-200 hover:shadow-orange-900/40 hover:scale-[1.02] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
                     >
-                      Ready to spot what they changed? Analyze {confirmedPairs.length} pair{confirmedPairs.length !== 1 ? 's' : ''} →
+                      <span className="hidden sm:inline">Ready to spot what they changed? </span>Analyze {confirmedPairs.length} pair{confirmedPairs.length !== 1 ? 's' : ''} →
                     </button>
                   </div>
                 </section>
@@ -1585,7 +1700,7 @@ export default function Home() {
                     ← Back to results
                   </button>
 
-                  <div className={`space-y-5 rounded-3xl border p-6 ${tc.card}`}>
+                  <div className={`space-y-5 rounded-3xl border p-4 sm:p-6 ${tc.card}`}>
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div>
                         <h2 className={`text-xl font-bold ${tc.text}`}>{detailResult.doc2Name}</h2>
@@ -1668,7 +1783,7 @@ export default function Home() {
 
         ) : (
           /* My Reviews full width */
-          <section className={`animate-fade-in-up space-y-5 rounded-3xl border p-8 ${tc.card}`}>
+          <section className={`animate-fade-in-up space-y-5 rounded-3xl border p-5 sm:p-8 ${tc.card}`}>
             <div>
               <h2 className={`text-xl font-bold ${tc.text}`}>My Reviews</h2>
               <p className={`mt-1 text-sm ${tc.textMuted}`}>Saved matter reviews. Each entry may contain multiple document pairs.</p>
