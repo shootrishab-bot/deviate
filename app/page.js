@@ -738,8 +738,8 @@ const GUIDE_STEPS = [
   {
     number: '01',
     title: 'Upload Your Documents',
-    description: 'Upload your firm's original document (term sheet, NDA, or agreement) and the counterparty's marked-up version. Deviate accepts PDF and DOCX files. You may upload multiple documents on each side simultaneously — for instance, all documents in a matter at once.',
-    detail: 'Supported formats: PDF (text-based) and DOCX. Scanned PDFs without embedded text may produce incomplete results. For best accuracy, use text-searchable PDFs or Word documents.',
+    description: "Upload your firm's original document (term sheet, NDA, or agreement) and the counterparty's marked-up version. Deviate accepts PDF and DOCX files. You may upload multiple documents on each side simultaneously — for instance, all documents in a matter at once.",
+    detail: "Supported formats: PDF (text-based) and DOCX. Scanned PDFs without embedded text may produce incomplete results. For best accuracy, use text-searchable PDFs or Word documents.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
@@ -750,7 +750,7 @@ const GUIDE_STEPS = [
     number: '02',
     title: 'Pair the Documents',
     description: 'Deviate automatically suggests which firm document corresponds to which counterparty document, based on filename similarity. A confidence score is shown for each suggested pairing.',
-    detail: 'You may override any suggestion using the dropdown menu. Documents you do not wish to analyse in this session can be skipped individually — they will not be removed from your upload.',
+    detail: "You may override any suggestion using the dropdown menu. Documents you do not wish to analyse in this session can be skipped individually — they will not be removed from your upload.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 3M21 7.5H7.5" />
@@ -760,8 +760,8 @@ const GUIDE_STEPS = [
   {
     number: '03',
     title: 'AI Analysis',
-    description: 'Deviate's AI engine reads both documents and identifies every point where the counterparty's draft deviates from the agreed position. This is not a word-for-word comparison — the AI understands legal meaning and commercial context.',
-    detail: 'The analysis detects three categories of deviation: Modified (a clause exists in both but the terms have changed), Added (a new clause inserted by the counterparty that was not in your original), and Omitted (a clause present in your document that has been removed).',
+    description: "Deviate's AI engine reads both documents and identifies every point where the counterparty's draft deviates from the agreed position. This is not a word-for-word comparison — the AI understands legal meaning and commercial context.",
+    detail: "The analysis detects three categories of deviation: Modified (a clause exists in both but the terms have changed), Added (a new clause inserted by the counterparty that was not in your original), and Omitted (a clause present in your document that has been removed).",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21a48.309 48.309 0 01-8.135-.687c-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
@@ -771,8 +771,8 @@ const GUIDE_STEPS = [
   {
     number: '04',
     title: 'Review the Findings',
-    description: 'Results are presented in a structured deviation table. Each row identifies the clause, the type of deviation, what your document said, what the counterparty's draft says, a risk rating, and a plain-English explanation of the commercial consequence.',
-    detail: 'Use the filter buttons — High, Medium, Low risk, or by deviation type — to focus your review. The "Our Position" column draws from your firm's Playbook. The "Suggested Response" column provides pre-drafted negotiation language ready to copy and send.',
+    description: "Results are presented in a structured deviation table. Each row identifies the clause, the type of deviation, what your document said, what the counterparty's draft says, a risk rating, and a plain-English explanation of the commercial consequence.",
+    detail: "Use the filter buttons — High, Medium, Low risk, or by deviation type — to focus your review. The \"Our Position\" column draws from your firm's Playbook. The \"Suggested Response\" column provides pre-drafted negotiation language ready to copy and send.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
@@ -782,8 +782,8 @@ const GUIDE_STEPS = [
   {
     number: '05',
     title: 'Export the Report',
-    description: 'Generate a professional Word document (.docx) report for each document pair. The report includes a cover page, an executive summary with a risk breakdown, the full findings table with playbook positions and suggested responses, and a legal disclaimer.',
-    detail: 'Reports are formatted for immediate use in client communications or internal matter files. The cover page includes a reviewed-by signature line. All generated reports are attorney work product and should be reviewed by instructed counsel before use.',
+    description: "Generate a professional Word document (.docx) report for each document pair. The report includes a cover page, an executive summary with a risk breakdown, the full findings table with playbook positions and suggested responses, and a legal disclaimer.",
+    detail: "Reports are formatted for immediate use in client communications or internal matter files. The cover page includes a reviewed-by signature line. All generated reports are attorney work product and should be reviewed by instructed counsel before use.",
     icon: (
       <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
@@ -794,28 +794,28 @@ const GUIDE_STEPS = [
 
 const GUIDE_FAQS = [
   {
-    q: 'What types of documents does Deviate work with?',
-    a: 'Deviate is designed for Indian corporate law documents including term sheets, NDAs, vendor agreements, shareholder agreements, employment contracts, and any other bilateral commercial agreements. It performs best on structured legal documents with clearly delineated clauses.',
+    q: "What types of documents does Deviate work with?",
+    a: "Deviate is designed for Indian corporate law documents including term sheets, NDAs, vendor agreements, shareholder agreements, employment contracts, and any other bilateral commercial agreements. It performs best on structured legal documents with clearly delineated clauses.",
   },
   {
-    q: 'How accurate is the AI analysis?',
-    a: 'Deviate is trained to identify material deviations in standard Indian corporate law clause types. It is highly accurate for common clauses such as indemnity, limitation of liability, non-compete, governing law, and dispute resolution. All output should be reviewed by a qualified legal professional before reliance. Deviate is a tool to accelerate review, not replace it.',
+    q: "How accurate is the AI analysis?",
+    a: "Deviate is trained to identify material deviations in standard Indian corporate law clause types. It is highly accurate for common clauses such as indemnity, limitation of liability, non-compete, governing law, and dispute resolution. All output should be reviewed by a qualified legal professional before reliance. Deviate is a tool to accelerate review, not replace it.",
   },
   {
-    q: 'What is the Playbook and how do I configure it?',
-    a: 'The Playbook is your firm's internal library of standard positions on common clause types. For each clause type, you can define your preferred position, what constitutes a dealbreaker, and suggested negotiation language. When Deviate identifies a deviation, it matches the clause against your Playbook and surfaces the relevant position and response automatically. Navigate to the Playbook page from the header to configure your entries.',
+    q: "What is the Playbook and how do I configure it?",
+    a: "The Playbook is your firm's internal library of standard positions on common clause types. For each clause type, you can define your preferred position, what constitutes a dealbreaker, and suggested negotiation language. When Deviate identifies a deviation, it matches the clause against your Playbook and surfaces the relevant position and response automatically. Navigate to the Playbook page from the header to configure your entries.",
   },
   {
-    q: 'Are my documents stored or shared?',
-    a: 'Documents are processed in memory during analysis and are not stored on Deviate's servers. Saved reviews are stored locally in your browser's storage and are not accessible to any other user or device. For matters involving highly sensitive documents, we recommend reviewing your firm's data handling policies before use.',
+    q: "Are my documents stored or shared?",
+    a: "Documents are processed in memory during analysis and are not stored on Deviate's servers. Saved reviews are stored locally in your browser's storage and are not accessible to any other user or device. For matters involving highly sensitive documents, we recommend reviewing your firm's data handling policies before use.",
   },
   {
-    q: 'Can I analyse multiple document pairs at once?',
-    a: 'Yes. You may upload multiple firm documents and multiple counterparty documents simultaneously. In the pairing step, each firm document is matched to its counterparty version. All confirmed pairs are analysed in a single batch and results are presented together in the results dashboard.',
+    q: "Can I analyse multiple document pairs at once?",
+    a: "Yes. You may upload multiple firm documents and multiple counterparty documents simultaneously. In the pairing step, each firm document is matched to its counterparty version. All confirmed pairs are analysed in a single batch and results are presented together in the results dashboard.",
   },
   {
-    q: 'What do the risk levels mean?',
-    a: 'High risk indicates a deviation with significant potential commercial or legal consequence — for example, removal of a liability cap or insertion of an unlimited indemnity. Medium risk covers deviations that are meaningful but negotiable. Low risk covers minor variations that are unlikely to materially affect the transaction. Risk levels are assigned by the AI based on the nature of the clause and the extent of the change.',
+    q: "What do the risk levels mean?",
+    a: "High risk indicates a deviation with significant potential commercial or legal consequence — for example, removal of a liability cap or insertion of an unlimited indemnity. Medium risk covers deviations that are meaningful but negotiable. Low risk covers minor variations that are unlikely to materially affect the transaction. Risk levels are assigned by the AI based on the nature of the clause and the extent of the change.",
   },
 ]
 
@@ -915,7 +915,7 @@ function GuideModal({ onClose }) {
                 <div className="space-y-3">
                   {[
                     { label: 'Clause Type', color: 'text-[#1DB954]', desc: 'The name of the clause (e.g. Indemnity, Non-Compete, Governing Law). Deviate matches deviations to entries using this field.' },
-                    { label: 'Preferred Position', color: tc.textSec, desc: 'Your firm's standard position on this clause type — what you would typically insist on in a negotiation.' },
+                    { label: "Preferred Position", color: tc.textSec, desc: "Your firm's standard position on this clause type — what you would typically insist on in a negotiation." },
                     { label: 'Dealbreaker', color: 'text-[#FF4444]/80', desc: 'Positions or formulations that are categorically unacceptable. This is surfaced as a flag during analysis.' },
                     { label: 'Suggested Response', color: 'text-[#1DB954]', desc: 'The negotiation language your team would typically use to push back on a deviation. This is copied directly into the findings table and can be sent to opposing counsel.' },
                   ].map(({ label, color, desc }) => (
