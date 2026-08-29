@@ -202,7 +202,7 @@ export default function PlaybookPage() {
             )}
             <ThemeToggle dark={dark} onToggle={toggleTheme} />
             <a
-              href="/"
+              href="/app"
               className={`rounded-2xl px-4 py-2 text-sm font-medium transition-all duration-200 hover:bg-white/5 ${tc.textSec}`}
             >
               ← Back to analysis

@@ -113,6 +113,37 @@ h1, h2, h3, h4, h5, h6 {
   to   { width: var(--bar-width); }
 }
 
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.94) translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@keyframes slideInX {
+  from { opacity: 0; transform: translateX(-18px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* A screen settling flat out of a slight tilt — used for product shots. */
+@keyframes screenIn {
+  from { opacity: 0; transform: perspective(1600px) rotateX(7deg) translateY(40px) scale(0.97); }
+  to   { opacity: 1; transform: perspective(1600px) rotateX(0deg) translateY(0) scale(1); }
+}
+
+@keyframes screenSwap {
+  from { opacity: 0; transform: scale(0.985); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes badgeIn {
+  from { opacity: 0; transform: scale(0.86) translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+
 @keyframes lightbulbFlicker {
   0%   { opacity: 0; }
   5%   { opacity: 0.85; }
@@ -140,6 +171,13 @@ h1, h2, h3, h4, h5, h6 {
   .animate-fade-in    { animation: fadeIn   0.25s ease-out both; }
   .animate-scale-in   { animation: scaleIn  0.18s ease-out both; }
   .animate-spin-slow  { animation: spin 1.2s linear infinite; }
+
+  .animate-pop-in     { animation: popIn     0.55s cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-rise-in    { animation: riseIn    0.65s cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-slide-in-x { animation: slideInX  0.5s  cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-screen-in  { animation: screenIn  0.95s cubic-bezier(0.16,1,0.3,1) both; }
+  .animate-screen-swap{ animation: screenSwap 0.45s ease-out both; }
+  .animate-badge-in   { animation: badgeIn   0.5s  cubic-bezier(0.34,1.56,0.64,1) both; }
 
   .progress-shimmer {
     background: linear-gradient(90deg, #1DB954 0%, #22D96B 45%, #1DB954 100%);
@@ -199,3 +237,12 @@ html.light ::selection { color: #111; }
   display: flex; align-items: center; justify-content: center; padding: 1.5rem;
 }
 html.light .modal-backdrop { background: rgba(0,0,0,0.4); }
+/* ── Reduced motion ────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
