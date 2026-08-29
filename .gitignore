@@ -34,3 +34,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# marketing renders (kept local; regenerate with marketing/*.mjs)
+marketing/*.mp4
+marketing/*.webm
+marketing/*.gif
+marketing/.frames/
+marketing/.raw/
+marketing/.cmp/
