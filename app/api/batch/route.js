@@ -1,120 +1,130 @@
 import { NextResponse } from 'next/server'
+import { analyzeOnePair } from '../../../lib/analyze-pair'
+import { rateLimit, clientKey, tooManyRequests } from '../../../lib/rate-limit'
 
-const SYSTEM_PROMPT = `You are an expert Indian corporate lawyer comparing a term sheet against a received contract draft. Your task is to find every clause where the received draft DEVIATES from what was agreed in the term sheet.
+// Vercel Hobby caps a function at 60s. The client splits large batches into
+// sub-batches so a run stays well inside this; the budget below stops a slow
+// pair from taking the whole window down with it.
+export const maxDuration = 60
 
-Focus on these clause types: Indemnity, Limitation of Liability, Non-Compete, Non-Solicit, Governing Law, Dispute Resolution/Arbitration, Representations & Warranties, Termination, Conditions Precedent, Confidentiality, Data Protection, Assignment, Audit Rights, Exclusivity, Most Favored Customer, Change of Control.
+const MAX_PAIRS_PER_REQUEST = 3
+const TIME_BUDGET_MS = 50_000
+const RATE_LIMIT = { limit: 30, windowMs: 5 * 60 * 1000 }
 
-You must detect THREE types of deviations:
-1. MODIFIED: A clause exists in both documents but the received draft changes the terms in a way that disadvantages our client
-2. ADDED: A clause appears in the received draft that was NOT present in the term sheet at all.
-3. OMITTED: A clause was present in the term sheet but has been REMOVED entirely from the received draft.
+// A pair of contracts this size is already far beyond anything the extractor
+// produces from a real document; past it, the cost is the attacker's to choose.
+const MAX_DOC_CHARS = 400_000
+const MAX_PLAYBOOK_ENTRIES = 100
 
-For ADDED clauses, set termSheetPosition to "Not present in term sheet — this clause was added by counterparty"
-For OMITTED clauses, set receivedDraftPosition to "Removed from draft — this protection was deleted"
-
-Output ONLY a valid JSON object. No text before or after. No markdown code fences.
-
-{
-  "deviations": [
-    {
-      "clauseName": "string",
-      "deviationType": "Modified" | "Added" | "Omitted",
-      "termSheetPosition": "what the term sheet says in 1-2 sentences",
-      "receivedDraftPosition": "how the draft differs in 1-2 sentences",
-      "riskLevel": "High" | "Medium" | "Low",
-      "explanation": "1-2 sentence practical explanation of the impact on our client"
-    }
-  ]
-}
-
-If no deviations found, return: {"deviations":[]}
-Only report ACTUAL differences where the received draft is worse for our client. Do not hallucinate.`
-
-async function analyzeOnePair({ doc1Text, doc2Text, apiKey }) {
-  const userMessage = `DOCUMENT A (Term Sheet / Agreed Position):\n\n${doc1Text}\n\n---\n\nDOCUMENT B (Received Draft):\n\n${doc2Text}`
-
-  const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: 'deepseek-chat',
-      temperature: 0.1,
-      max_tokens: 4000,
-      messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: userMessage },
-      ],
-    }),
-  })
-
-  if (!response.ok) {
-    throw new Error(`DeepSeek returned ${response.status}`)
-  }
-
-  const data = await response.json()
-  let rawContent = (data.choices?.[0]?.message?.content || '').trim()
-
-  if (rawContent.startsWith('```json')) {
-    rawContent = rawContent.replace(/^```json\n?/, '').replace(/\n?```$/, '')
-  } else if (rawContent.startsWith('```')) {
-    rawContent = rawContent.replace(/^```\n?/, '').replace(/\n?```$/, '')
-  }
-
-  const parsed = JSON.parse(rawContent)
-  return parsed.deviations || []
-}
+// ─── Route handler ───────────────────────────────────────────────────────────
 
 /**
- * POST /api/batch-analyze
+ * POST /api/batch
  *
  * Body: {
- *   pairs: [
- *     { pairId, doc1Text, doc2Text, doc1Name, doc2Name }
- *   ]
+ *   pairs: [{ pairId, doc1Text, doc2Text, doc1Name, doc2Name }],
+ *   playbookEntries: [{ clauseType, preferredPosition, dealbreaker, suggestedResponse }]
  * }
  *
- * Returns: {
- *   results: [
- *     { pairId, doc1Name, doc2Name, deviations, summary, error? }
- *   ]
- * }
+ * Returns: { results: [{ pairId, doc1Name, doc2Name, deviations, summary, error? }] }
+ *
+ * The client sends large batches as several smaller requests so each one stays
+ * inside maxDuration and progress can be shown as sub-batches land.
  */
 export async function POST(request) {
+  const startTime = Date.now()
+
   try {
+    const limit = rateLimit({ key: clientKey(request, 'batch'), ...RATE_LIMIT })
+    if (!limit.ok) {
+      const { body, headers } = tooManyRequests(
+        limit.retryAfterSeconds,
+        'Too many analysis requests from this location. Please wait a moment and try again.'
+      )
+      return NextResponse.json(body, { status: 429, headers })
+    }
+
     const apiKey = process.env.DEEPSEEK_API_KEY
     if (!apiKey) {
       return NextResponse.json({ error: 'API key not configured' }, { status: 500 })
     }
 
-    const { pairs } = await request.json()
+    const { pairs, playbookEntries } = await request.json()
 
     if (!Array.isArray(pairs) || pairs.length === 0) {
       return NextResponse.json({ error: 'No pairs provided' }, { status: 400 })
     }
+    if (pairs.length > MAX_PAIRS_PER_REQUEST) {
+      return NextResponse.json(
+        {
+          error: `Too many pairs in one request (max ${MAX_PAIRS_PER_REQUEST}). Split the batch into smaller requests.`,
+        },
+        { status: 400 }
+      )
+    }
 
+    const oversized = pairs.find(
+      (p) => (p?.doc1Text?.length || 0) + (p?.doc2Text?.length || 0) > MAX_DOC_CHARS
+    )
+    if (oversized) {
+      return NextResponse.json(
+        { error: `Documents are too long to analyse (limit ${MAX_DOC_CHARS.toLocaleString()} characters per pair).` },
+        { status: 413 }
+      )
+    }
+
+    const entries = (Array.isArray(playbookEntries) ? playbookEntries : []).slice(0, MAX_PLAYBOOK_ENTRIES)
     const results = []
 
-    // Run sequentially to avoid rate-limit issues
+    // Sequential: DeepSeek rate-limits concurrent calls, and the time budget
+    // below keeps the whole request inside maxDuration.
     for (const pair of pairs) {
       const { pairId, doc1Text, doc2Text, doc1Name, doc2Name } = pair
+      const remaining = TIME_BUDGET_MS - (Date.now() - startTime)
+
+      const emptySummary = { total: 0, high: 0, medium: 0, low: 0, added: 0, omitted: 0, modified: 0 }
+
+      if (remaining <= 2000) {
+        results.push({
+          pairId,
+          doc1Name,
+          doc2Name,
+          deviations: [],
+          summary: emptySummary,
+          error: 'Ran out of time before this pair was analyzed — try a smaller batch.',
+        })
+        continue
+      }
 
       try {
-        const deviations = await analyzeOnePair({ doc1Text, doc2Text, apiKey })
+        const { deviations, mode, stats, retried } = await analyzeOnePair({
+          doc1Text,
+          doc2Text,
+          playbookEntries: entries,
+          apiKey,
+          timeoutMs: remaining,
+        })
 
-        const summary = {
-          total: deviations.length,
-          high: deviations.filter((d) => d.riskLevel === 'High').length,
-          medium: deviations.filter((d) => d.riskLevel === 'Medium').length,
-          low: deviations.filter((d) => d.riskLevel === 'Low').length,
-          added: deviations.filter((d) => d.deviationType === 'Added').length,
-          omitted: deviations.filter((d) => d.deviationType === 'Omitted').length,
-          modified: deviations.filter((d) => d.deviationType === 'Modified').length,
-        }
+        console.log(
+          `Pair ${pairId}: mode=${mode}${stats ? ` candidates=${JSON.stringify(stats)}` : ''} ` +
+            `deviations=${deviations.length}${retried ? ' (after retry)' : ''}`
+        )
 
-        results.push({ pairId, doc1Name, doc2Name, deviations, summary })
+        results.push({
+          pairId,
+          doc1Name,
+          doc2Name,
+          deviations,
+          summary: {
+            total: deviations.length,
+            high: deviations.filter((d) => d.riskLevel === 'High').length,
+            medium: deviations.filter((d) => d.riskLevel === 'Medium').length,
+            low: deviations.filter((d) => d.riskLevel === 'Low').length,
+            added: deviations.filter((d) => d.deviationType === 'Added').length,
+            omitted: deviations.filter((d) => d.deviationType === 'Omitted').length,
+            modified: deviations.filter((d) => d.deviationType === 'Modified').length,
+          },
+        })
       } catch (err) {
         console.error(`Error analyzing pair ${pairId}:`, err)
         results.push({
@@ -122,7 +132,7 @@ export async function POST(request) {
           doc1Name,
           doc2Name,
           deviations: [],
-          summary: { total: 0, high: 0, medium: 0, low: 0, added: 0, omitted: 0, modified: 0 },
+          summary: emptySummary,
           error: err.message || 'Analysis failed for this pair',
         })
       }
@@ -130,10 +140,8 @@ export async function POST(request) {
 
     return NextResponse.json({ results })
   } catch (error) {
-    console.error('Error in batch-analyze API:', error)
-    return NextResponse.json(
-      { error: 'Batch analysis failed', details: error.message },
-      { status: 500 }
-    )
+    // Details stay in the server log; the response says only that it failed.
+    console.error('Error in batch API:', error)
+    return NextResponse.json({ error: 'Batch analysis failed' }, { status: 500 })
   }
 }

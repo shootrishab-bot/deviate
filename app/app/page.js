@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { getPlaybook, findPlaybookMatch } from '../../lib/playbook'
+import { getPlaybook, augmentWithPlaybook } from '../../lib/playbook'
+import { AUTO_PAIR_THRESHOLD, buildAutoSuggestions } from '../../lib/pairing'
 import { saveBatch, getBatches, getBatch, deleteBatch, generateId } from '../../lib/storage'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -18,6 +19,10 @@ const PHASES = {
   RESULTS:   'results',
   REVIEWS:   'reviews',
 }
+
+// Pairs are analysed in small sub-batches so each request stays inside the
+// 60s function limit and progress can be shown as each one lands.
+const PAIRS_PER_REQUEST = 2
 
 const LOADING_TIPS = [
   'Scanning for hidden clauses...',
@@ -48,38 +53,6 @@ const isValidSuggestedResponse = (response) => {
     !t.includes('No playbook entry') &&
     !t.includes('No response configured')
   )
-}
-
-const filenameSimilarity = (a, b) => {
-  const norm = (s) =>
-    s.toLowerCase().replace(/\.(pdf|docx)$/i, '').replace(/[^a-z0-9]/g, '')
-  const na = norm(a)
-  const nb = norm(b)
-  if (!na || !nb) return 0
-  const longer = na.length > nb.length ? na : nb
-  const shorter = na.length > nb.length ? nb : na
-  if (longer.includes(shorter)) return shorter.length / longer.length
-  let common = 0
-  for (let i = 0; i < shorter.length; i++) {
-    if (longer.includes(shorter[i])) common++
-  }
-  return common / longer.length
-}
-
-const buildAutoSuggestions = (firmDocs, counterpartyDocs) => {
-  const pairs = {}
-  const scores = {}
-  firmDocs.forEach((fd) => {
-    let best = null
-    let bestScore = 0
-    counterpartyDocs.forEach((cd) => {
-      const score = filenameSimilarity(fd.name, cd.name)
-      if (score > bestScore) { bestScore = score; best = cd.name }
-    })
-    pairs[fd.name] = bestScore > 0.3 ? best : null
-    scores[fd.name] = bestScore
-  })
-  return { pairs, scores }
 }
 
 // ─── Theme hook ───────────────────────────────────────────────────────────────
@@ -638,15 +611,7 @@ function PairingSummaryCard({ pair, onViewDetail, onExportPreview, exporting }) 
 function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskFilter }) {
   const [copiedIndex, setCopiedIndex] = useState(null)
 
-  const augmented = deviations.map((d) => {
-    const match = findPlaybookMatch(d.clauseName, playbookEntries)
-    return {
-      ...d,
-      playbookPosition: match?.preferredPosition || 'No playbook entry configured yet',
-      suggestedResponse: match?.suggestedResponse || 'No response configured',
-      hasPlaybookMatch: Boolean(match),
-    }
-  })
+  const augmented = augmentWithPlaybook(deviations, playbookEntries)
 
   const displayed = augmented.filter((d) => {
     if (activeFilter && d.deviationType !== activeFilter) return false
@@ -708,7 +673,7 @@ function DeviationTable({ deviations, playbookEntries, activeFilter, activeRiskF
                 <td className={`px-5 py-4 align-top`}>
                   {isValidSuggestedResponse(d.suggestedResponse) ? (
                     <div className="space-y-2">
-                      {d.playbookPosition && d.playbookPosition !== 'No playbook entry configured yet' && (
+                      {d.playbookPosition && (
                         <div className="mb-2">
                           <p className={`text-[10px] font-semibold uppercase tracking-widest mb-0.5 ${tc.textMuted}`}>Our position</p>
                           <p className={`text-xs ${tc.textSec}`}>{abstractText(d.playbookPosition, 120)}</p>
@@ -1300,6 +1265,7 @@ export default function Home() {
 
   const [pairResults, setPairResults] = useState([])
   const [analyzeError, setAnalyzeError] = useState(null)
+  const [saveError, setSaveError] = useState(null)
 
   const [detailPairId, setDetailPairId] = useState(null)
   const [detailFilter, setDetailFilter] = useState(null)
@@ -1373,12 +1339,13 @@ export default function Home() {
       const data = await res.json()
       setFirmFiles(data.firmDocs.map((d) => ({ name: d.name, text: d.text, chars: d.chars })))
       setCounterpartyFiles(data.counterpartyDocs.map((d) => ({ name: d.name, text: d.text, chars: d.chars })))
-      const { pairs: suggestedPairs, scores } = buildAutoSuggestions(data.firmDocs, data.counterpartyDocs)
+      const { pairs: suggestedPairs, suggestions, scores } = buildAutoSuggestions(data.firmDocs, data.counterpartyDocs)
       setPairScores(scores)
       setPairs(data.firmDocs.map((fd) => ({
         pairId: generateId(),
         firmDocName: fd.name,
         counterpartyDocName: suggestedPairs[fd.name] || null,
+        suggestedName: suggestions[fd.name] || null,
         skip: false,
       })))
       setPhase(PHASES.PAIRING)
@@ -1402,6 +1369,7 @@ export default function Home() {
     if (confirmedPairs.length === 0) return
     setPhase(PHASES.ANALYZING)
     setAnalyzeError(null)
+    setSaveError(null)
     setTipIndex(0)
 
     const initial = confirmedPairs.map((p) => ({
@@ -1420,21 +1388,52 @@ export default function Home() {
       return { pairId: p.pairId, doc1Name: p.firmDocName, doc2Name: p.counterpartyDocName, doc1Text: firmDoc?.text || '', doc2Text: cpDoc?.text || '' }
     })
 
+    const subBatches = []
+    for (let i = 0; i < payloadPairs.length; i += PAIRS_PER_REQUEST) {
+      subBatches.push(payloadPairs.slice(i, i + PAIRS_PER_REQUEST))
+    }
+
+    const applyResults = (results) =>
+      setPairResults((prev) =>
+        prev.map((slot) => {
+          const found = results.find((r) => r.pairId === slot.pairId)
+          if (!found) return slot
+          return {
+            ...slot,
+            deviations: found.deviations || [],
+            summary: found.summary || slot.summary,
+            status: found.error ? 'error' : 'complete',
+            error: found.error || null,
+          }
+        })
+      )
+
     try {
-      const res = await fetch('/api/batch', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pairs: payloadPairs }),
-      })
-      if (!res.ok) {
-        const err = await res.json().catch(() => null)
-        throw new Error(err?.error || 'Batch analysis failed')
+      const collected = []
+
+      // One request per sub-batch, in order, so each stays inside the function
+      // time limit and finished pairs appear as they land.
+      for (const chunk of subBatches) {
+        const res = await fetch('/api/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pairs: chunk, playbookEntries }),
+        })
+        if (!res.ok) {
+          const err = await res.json().catch(() => null)
+          if (res.status === 429) {
+            throw new Error(err?.error || 'Too many requests — please wait a moment and try again.')
+          }
+          throw new Error(err?.error || 'Batch analysis failed')
+        }
+        const data = await res.json()
+        const results = data.results || []
+        collected.push(...results)
+        applyResults(results)
       }
-      const data = await res.json()
-      const results = data.results || []
 
       const finalResults = initial.map((slot) => {
-        const found = results.find((r) => r.pairId === slot.pairId)
+        const found = collected.find((r) => r.pairId === slot.pairId)
         if (!found) return { ...slot, status: 'error', error: 'No result returned' }
         return { ...slot, deviations: found.deviations || [], summary: found.summary || slot.summary, status: found.error ? 'error' : 'complete', error: found.error || null }
       })
@@ -1449,16 +1448,18 @@ export default function Home() {
         low:    finalResults.reduce((acc, r) => acc + (r.summary?.low    || 0), 0),
       }
 
-      saveBatch({
+      // Document text is not saved — only findings, names and counts.
+      const saved = saveBatch({
         id: generateId(),
         date: new Date().toISOString(),
         pairs: finalResults.map((r) => {
           const firmDoc = firmFiles.find((f) => f.name === r.doc1Name)
           const cpDoc = counterpartyFiles.find((f) => f.name === r.doc2Name)
-          return { pairId: r.pairId, doc1Name: r.doc1Name, doc2Name: r.doc2Name, doc1Text: firmDoc?.text || '', doc2Text: cpDoc?.text || '', doc1Chars: firmDoc?.chars || 0, doc2Chars: cpDoc?.chars || 0, deviations: r.deviations, summary: r.summary }
+          return { pairId: r.pairId, doc1Name: r.doc1Name, doc2Name: r.doc2Name, doc1Chars: firmDoc?.chars || 0, doc2Chars: cpDoc?.chars || 0, deviations: r.deviations, summary: r.summary }
         }),
         summary: batchSummary,
       })
+      setSaveError(saved.ok ? null : saved.error)
       setSavedBatches(getBatches())
 
       // Celebration moment
@@ -1472,7 +1473,7 @@ export default function Home() {
       setPairResults((prev) => prev.map((r) => (r.status === 'analyzing' ? { ...r, status: 'error', error: err.message } : r)))
       setPhase(PHASES.RESULTS)
     }
-  }, [confirmedPairs, firmFiles, counterpartyFiles])
+  }, [confirmedPairs, firmFiles, counterpartyFiles, playbookEntries])
 
   // ── Export ──────────────────────────────────────────────────────────────────
 
@@ -1485,9 +1486,18 @@ export default function Home() {
       const res = await fetch('/api/export', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ deviations: result.deviations, doc1Name: result.doc1Name, doc2Name: result.doc2Name, analysisDate }),
+        body: JSON.stringify({
+          deviations: result.deviations,
+          playbookEntries,
+          doc1Name: result.doc1Name,
+          doc2Name: result.doc2Name,
+          analysisDate,
+        }),
       })
-      if (!res.ok) throw new Error('Export failed')
+      if (!res.ok) {
+        const err = await res.json().catch(() => null)
+        throw new Error(err?.error || 'Export failed')
+      }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const filename = `Contract_Review_Report_${sanitizeFileName(result.doc2Name)}_${new Date().toISOString().split('T')[0]}.docx`
@@ -1534,6 +1544,7 @@ export default function Home() {
     setPairs([])
     setPairResults([])
     setAnalyzeError(null)
+    setSaveError(null)
     setUploadError(null)
     setDetailPairId(null)
     setDetailFilter(null)
@@ -1596,7 +1607,7 @@ export default function Home() {
       {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
 
       {/* ── Header ── */}
-      <header className={`sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl`}>
+      <header className={`header-surface sticky top-0 z-50 border-b border-[var(--border)] backdrop-blur-xl`}>
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-6">
           <button
             type="button"
@@ -1761,13 +1772,17 @@ export default function Home() {
                       const firmDoc = firmFiles.find((f) => f.name === pair.firmDocName)
                       const rawScore = pairScores[pair.firmDocName] || 0
                       const confPct = Math.round(rawScore * 100)
-                      const hasMatch = pair.counterpartyDocName && rawScore > 0.3
-                      const confLabel = hasMatch
-                        ? confPct >= 80 ? `${confPct}% confidence` : confPct >= 50 ? `${confPct}% confidence` : `${confPct}% confidence`
-                        : 'No clear match found'
-                      const confColor = hasMatch
-                        ? confPct >= 80 ? 'text-[#1DB954]' : confPct >= 50 ? 'text-[#FF6719]' : 'text-[#FF4444]'
-                        : tc.textMuted
+                      const autoPaired = rawScore >= AUTO_PAIR_THRESHOLD
+                      const confLabel = pair.counterpartyDocName
+                        ? `${confPct}% name match`
+                        : pair.suggestedName
+                          ? `${confPct}% name match — confirm below`
+                          : 'No clear match found'
+                      const confColor = pair.counterpartyDocName && autoPaired
+                        ? 'text-[#1DB954]'
+                        : pair.suggestedName
+                          ? 'text-[#FF6719]'
+                          : tc.textMuted
 
                       return (
                         <div
@@ -1802,6 +1817,20 @@ export default function Home() {
                                   <option key={f.name} value={f.name}>{f.name} {f.chars ? `(${f.chars.toLocaleString()} chars)` : ''}</option>
                                 ))}
                               </select>
+                              {!pair.skip && !pair.counterpartyDocName && pair.suggestedName && (
+                                <div className="mt-2 flex flex-wrap items-center gap-2">
+                                  <span className={`text-xs ${tc.textMuted}`}>
+                                    Suggested: <span className="font-semibold">{pair.suggestedName}</span> — the filenames are only a partial match, so confirm it.
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updatePair(pair.pairId, 'counterpartyDocName', pair.suggestedName)}
+                                    className="rounded-full border border-[#FF6719]/40 bg-[#FF6719]/10 px-3 py-1 text-xs font-semibold text-[#FF6719] transition-all hover:bg-[#FF6719]/20"
+                                  >
+                                    Use suggestion
+                                  </button>
+                                </div>
+                              )}
                             </div>
                             <div className="flex items-center gap-2">
                               {!pair.skip && pair.counterpartyDocName && <span className="text-xs font-semibold text-[#1DB954]">Paired</span>}
@@ -1885,6 +1914,15 @@ export default function Home() {
                     </div>
                     {exportMessage && (
                       <div className="mt-4 rounded-2xl border border-[#1DB954]/20 bg-[#1DB954]/5 p-3 text-xs text-[#1DB954]">{exportMessage}</div>
+                    )}
+                    {saveError && (
+                      <div className="mt-4 flex items-start gap-3 rounded-2xl border border-[#FF6719]/30 bg-[#FF6719]/5 p-4 text-xs text-[#FF6719]">
+                        <span className="mt-0.5 text-base">⚠️</span>
+                        <div>
+                          <p className="font-bold">Review not saved</p>
+                          <p className={`mt-0.5 ${tc.textSec}`}>{saveError}</p>
+                        </div>
+                      </div>
                     )}
                     <div className="mt-5 space-y-4">
                       {pairResults.map((result) => (

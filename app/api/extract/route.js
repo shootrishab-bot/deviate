@@ -1,6 +1,15 @@
 import { NextResponse } from 'next/server'
+import { rateLimit, clientKey, tooManyRequests } from '../../../lib/rate-limit'
 
 export const runtime = 'nodejs'
+export const maxDuration = 60
+
+// Parsing hostile PDF/DOCX files is CPU-bound and runs before anything else can
+// reject the request, so cap what may be sent at all.
+const MAX_FILE_BYTES = 15 * 1024 * 1024
+const MAX_TOTAL_BYTES = 40 * 1024 * 1024
+const MAX_FILES = 40
+const RATE_LIMIT = { limit: 20, windowMs: 5 * 60 * 1000 }
 
 const ensureDomPolyfills = () => {
   if (typeof globalThis.DOMMatrix === 'undefined') {
@@ -62,10 +71,35 @@ async function extractDocxText(arrayBuffer) {
 }
 
 async function extractText(file) {
+  if (!isPdfFile(file) && !isDocxFile(file)) {
+    throw new Error(`Unsupported file type: ${file.type || file.name}`)
+  }
+  if (file.size > MAX_FILE_BYTES) {
+    throw new Error(`${file.name} is larger than the ${MAX_FILE_BYTES / (1024 * 1024)}MB limit`)
+  }
   const arrayBuffer = await file.arrayBuffer()
   if (isPdfFile(file)) return extractPdfText(arrayBuffer)
-  if (isDocxFile(file)) return extractDocxText(arrayBuffer)
-  throw new Error(`Unsupported file type: ${file.type || file.name}`)
+  return extractDocxText(arrayBuffer)
+}
+
+const USER_FACING_ERROR = /^(Unsupported file type|.+ is larger than the|Too many files|Upload is too large)/
+
+const isUserFacing = (error) => USER_FACING_ERROR.test(error?.message || '')
+
+/** Reject oversized or overlong uploads before any parser touches them. */
+function checkUploadLimits(files) {
+  if (files.length > MAX_FILES) {
+    return `Too many files in one upload (max ${MAX_FILES}).`
+  }
+  const total = files.reduce((sum, f) => sum + (f.size || 0), 0)
+  if (total > MAX_TOTAL_BYTES) {
+    return `Upload is too large (max ${MAX_TOTAL_BYTES / (1024 * 1024)}MB in total).`
+  }
+  const oversized = files.find((f) => (f.size || 0) > MAX_FILE_BYTES)
+  if (oversized) {
+    return `${oversized.name} is larger than the ${MAX_FILE_BYTES / (1024 * 1024)}MB per-file limit.`
+  }
+  return null
 }
 
 /**
@@ -81,7 +115,22 @@ async function extractText(file) {
  */
 export async function POST(request) {
   try {
+    const limit = rateLimit({ key: clientKey(request, 'extract'), ...RATE_LIMIT })
+    if (!limit.ok) {
+      const { body, headers } = tooManyRequests(
+        limit.retryAfterSeconds,
+        'Too many uploads from this location. Please wait a moment and try again.'
+      )
+      return NextResponse.json(body, { status: 429, headers })
+    }
+
     const formData = await request.formData()
+
+    const allFiles = [...formData.values()].filter((v) => v instanceof File)
+    const limitError = checkUploadLimits(allFiles)
+    if (limitError) {
+      return NextResponse.json({ error: limitError }, { status: 413 })
+    }
 
     // Detect mode
     const doc1 = formData.get('doc1')
@@ -142,7 +191,9 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error in extract API:', error)
     return NextResponse.json(
-      { error: 'Failed to extract text: ' + (error?.message || String(error)) },
+      // Our own validation messages help the user; anything else (a parser
+      // throwing on a malformed file) stays in the log.
+      { error: isUserFacing(error) ? error.message : 'Failed to read one of the documents. Check that each file is a valid PDF or Word document.' },
       { status: 500 }
     )
   }

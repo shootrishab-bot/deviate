@@ -4,6 +4,10 @@ import {
   HeadingLevel, AlignmentType, BorderStyle, ShadingType, WidthType,
   Header, Footer, PageNumber, TabStopType, TabStopPosition,
 } from 'docx'
+import { augmentWithPlaybook } from '../../../lib/playbook'
+import { rateLimit, clientKey, tooManyRequests } from '../../../lib/rate-limit'
+
+const RATE_LIMIT = { limit: 20, windowMs: 5 * 60 * 1000 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -367,8 +371,23 @@ function sanitizeFilename(name) {
 
 export async function POST(request) {
   try {
+    const limit = rateLimit({ key: clientKey(request, 'export'), ...RATE_LIMIT })
+    if (!limit.ok) {
+      const { body: limitBody, headers } = tooManyRequests(
+        limit.retryAfterSeconds,
+        'Too many export requests from this location. Please wait a moment and try again.'
+      )
+      return NextResponse.json(limitBody, { status: 429, headers })
+    }
+
     const body = await request.json()
-    const { deviations, doc1Name, doc2Name, analysisDate, pairs, batchName } = body
+    const { deviations, doc1Name, doc2Name, analysisDate, pairs, batchName, playbookEntries } = body
+
+    // The report is built from raw model findings, so the firm's position and
+    // suggested response are matched here with the same logic the on-screen
+    // findings table uses. Without this the report's playbook columns are empty.
+    const entries = Array.isArray(playbookEntries) ? playbookEntries : []
+    const withPlaybook = (list) => augmentWithPlaybook(Array.isArray(list) ? list : [], entries)
 
     const sectionBase = {
       properties: {
@@ -390,7 +409,7 @@ export async function POST(request) {
         if (index > 0) allChildren.push(new Paragraph({ children: [], pageBreakBefore: true }))
         allChildren.push(
           ...buildReport({
-            deviations: pair.deviations || [],
+            deviations: withPlaybook(pair.deviations),
             doc1Name: pair.doc1Name || 'Document A',
             doc2Name: pair.doc2Name || 'Document B',
             analysisDate,
@@ -413,7 +432,7 @@ export async function POST(request) {
         sections: [{
           ...sectionBase,
           children: buildReport({
-            deviations: deviations || [],
+            deviations: withPlaybook(deviations),
             doc1Name: doc1Name || 'Term Sheet',
             doc2Name: doc2Name || 'Received Draft',
             analysisDate,
@@ -434,6 +453,6 @@ export async function POST(request) {
     })
   } catch (error) {
     console.error('Export error:', error)
-    return NextResponse.json({ error: 'Export failed', details: error.message }, { status: 500 })
+    return NextResponse.json({ error: 'Export failed' }, { status: 500 })
   }
 }
