@@ -955,7 +955,7 @@ export default function Landing() {
     <div className={`min-h-screen ${tc.bg} ${tc.text} transition-colors duration-300`}>
 
       {/* ── Header ── */}
-      <header className={`sticky top-0 z-50 border-b ${tc.border} bg-[var(--bg)]/80 backdrop-blur-xl`}>
+      <header className={`header-surface sticky top-0 z-50 border-b ${tc.border} backdrop-blur-xl`}>
         <div className="mx-auto flex h-[72px] max-w-7xl items-center justify-between px-4 sm:px-6">
           <a href="/" className="flex flex-col items-start gap-0 transition-opacity hover:opacity-80">
             <div className="flex items-center gap-1.5">
@@ -1127,7 +1127,7 @@ export default function Landing() {
         </section>
 
         {/* ── Demo walkthrough ── */}
-        <section id="demo" className="scroll-mt-24 border-y bg-[var(--bg-card)]/40 py-16 sm:py-24" style={{ borderColor: 'var(--border)' }}>
+        <section id="demo" className="scroll-mt-24 section-tint border-y py-16 sm:py-24" style={{ borderColor: 'var(--border)' }}>
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <SectionHeading
               eyebrow="The walkthrough"
@@ -1260,7 +1260,7 @@ export default function Landing() {
         </section>
 
         {/* ── Risk model ── */}
-        <section id="risk" className="scroll-mt-24 border-y bg-[var(--bg-card)]/40 py-16 sm:py-24" style={{ borderColor: 'var(--border)' }}>
+        <section id="risk" className="scroll-mt-24 section-tint border-y py-16 sm:py-24" style={{ borderColor: 'var(--border)' }}>
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <SectionHeading
                 eyebrow="Risk model"
@@ -1356,7 +1356,7 @@ export default function Landing() {
         </section>
 
         {/* ── Export ── */}
-        <section id="export" className="scroll-mt-24 border-y bg-[var(--bg-card)]/40 py-16 sm:py-24" style={{ borderColor: 'var(--border)' }}>
+        <section id="export" className="scroll-mt-24 section-tint border-y py-16 sm:py-24" style={{ borderColor: 'var(--border)' }}>
           <div className="mx-auto max-w-7xl px-4 sm:px-6">
             <div className="grid gap-12 lg:grid-cols-2 lg:items-center">
               <Reveal y={30} scale={0.97} duration={780} className="order-2 lg:order-1">

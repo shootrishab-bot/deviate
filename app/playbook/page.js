@@ -180,7 +180,7 @@ export default function PlaybookPage() {
     <div className={`min-h-screen ${tc.bg} ${tc.text} transition-colors duration-300`}>
 
       {/* ── Header ── */}
-      <header className={`sticky top-0 z-50 border-b border-[var(--border)] bg-[var(--bg)]/80 backdrop-blur-xl`}>
+      <header className={`header-surface sticky top-0 z-50 border-b border-[var(--border)] backdrop-blur-xl`}>
         <div className="mx-auto flex h-[72px] max-w-4xl items-center justify-between px-6">
           <a
             href="/"

@@ -194,6 +194,27 @@ h1, h2, h3, h4, h5, h6 {
     animation: barGrow 0.8s cubic-bezier(0.4, 0, 0.2, 1) both;
   }
 
+  /* Frosted sticky header: backdrop-blur does the work and no tint sits over
+     it, so the page reads through the bar as it scrolls. Shared by the landing,
+     app and playbook headers so the three stay identical.
+
+     This is a class rather than `bg-[var(--bg)]/80` because Tailwind's opacity
+     modifier rewrites a colour into `rgb(<channels> / .8)`, which cannot work
+     on a var holding a full hex colour — that declaration was invalid and
+     silently computed to transparent. Same rendered result, now on purpose and
+     in one place. Set --header-tint (e.g. 30%) to lay a scrim under the blur. */
+  .header-surface {
+    background-color: color-mix(in srgb, var(--bg) var(--header-tint, 0%), transparent);
+  }
+
+  /* Alternating section tint. Same story as .header-surface:
+     `bg-[var(--bg-card)]/40` rewrote the colour to `rgb(<channels> / .4)`,
+     which a var holding a hex colour cannot satisfy, so the declaration was
+     invalid and these sections rendered with no tint at all. */
+  .section-tint {
+    background-color: color-mix(in srgb, var(--bg-card) 40%, transparent);
+  }
+
   /* Card and button theme-aware classes */
   .card {
     background-color: var(--bg-card);
