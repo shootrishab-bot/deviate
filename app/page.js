@@ -391,7 +391,7 @@ function ScreenPairing() {
                     <div className="min-w-0">
                       <div className="mb-1 flex items-center justify-between">
                         <p className={`text-[9px] font-semibold uppercase tracking-widest ${tc.textMuted}`}>Counterparty document</p>
-                        <span className={`text-[9px] font-semibold ${r.tone}`}>{r.conf}% confidence</span>
+                        <span className={`text-[9px] font-semibold ${r.tone}`}>{r.conf}% name match</span>
                       </div>
                       <div className={`flex items-center justify-between rounded-xl border px-3 py-2 ${tc.card}`}>
                         <span className={`truncate text-[12px] ${tc.text}`}>{r.cp}</span>
@@ -419,7 +419,7 @@ function ScreenPairing() {
         <div className="w-[300px] flex-shrink-0 space-y-3">
           <MockCard title="Smart pairing">
             <ul className="space-y-1.5">
-              {['We matched your docs by filename similarity', 'Use the dropdown to swap any suggestion', "Skip docs you don't need analyzed", 'Go back to upload to add more files'].map((t) => (
+              {['We matched your docs by filename similarity', 'Confident matches are selected; weaker ones need your OK', 'Use the dropdown to swap any suggestion', "Skip docs you don't need analyzed"].map((t) => (
                 <li key={t} className="flex gap-2"><span className="mt-0.5 text-[#1DB954]">·</span><span>{t}</span></li>
               ))}
             </ul>
@@ -770,14 +770,14 @@ const DEMO_STEPS = [
     n: '02',
     tab: 'Pair',
     title: 'Pair documents in one pass',
-    body: 'Deviate proposes a match for each firm document with a confidence score drawn from filename similarity. Override any suggestion from the dropdown, or skip documents you are not reviewing this session.',
+    body: 'Deviate proposes a match for each firm document and shows the filename score behind it. Confident matches are pre-selected; weaker ones wait for your OK. Override any suggestion from the dropdown, or skip documents you are not reviewing this session.',
     Screen: ScreenPairing,
   },
   {
     n: '03',
     tab: 'Analyse',
     title: 'The engine reads for meaning',
-    body: 'Both documents are read in full and compared clause by clause. This is not a word-level diff: the analysis identifies what was modified, added or omitted, and what each change does commercially.',
+    body: 'Both documents are split into clauses and aligned, and anything identical on both sides is set aside. What changed is then read for meaning: what was modified, added or omitted, and what each change does commercially. Not a word-level diff.',
     Screen: ScreenAnalyzing,
   },
   {
@@ -798,7 +798,7 @@ const DEMO_STEPS = [
     n: '06',
     tab: 'Playbook',
     title: 'Your positions, applied automatically',
-    body: 'The Playbook holds your firm’s preferred position, dealbreakers and drafted response for each clause type. Configure it once and every future analysis fills the response column on its own.',
+    body: 'The Playbook holds your firm’s preferred position, dealbreakers and drafted response for each clause type. Configure it once: every future analysis grades risk against those positions, and fills the response column on its own.',
     Screen: ScreenPlaybook,
   },
 ]
@@ -829,7 +829,7 @@ const FEATURES = [
   {
     accent: 'green',
     title: 'Meaning, not word-diff',
-    body: 'A redline tells you a word moved. Deviate tells you the liability cap is gone, and what that costs on this deal.',
+    body: 'Deviate lines the two drafts up clause by clause, sets aside everything that is untouched, and reads what is left. A redline tells you a word moved. Deviate tells you the liability cap is gone, and what that costs on this deal.',
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714c0 .597.237 1.17.659 1.591L19.8 15.3M14.25 3.104c.251.023.501.05.75.082M19.8 15.3l-1.57.393A9.065 9.065 0 0112 15a9.065 9.065 0 00-6.23-.693L5 14.5m14.8.8l1.402 1.402c1.232 1.232.65 3.318-1.067 3.611A48.309 48.309 0 0112 21a48.309 48.309 0 01-8.135-.687c-1.718-.293-2.3-2.379-1.067-3.61L5 14.5" />
     ),
@@ -845,7 +845,7 @@ const FEATURES = [
   {
     accent: 'green',
     title: 'Your playbook, applied',
-    body: 'Each deviation is matched against your firm’s standard position and pre-drafted response. Copy it into the reply to opposing counsel without opening a precedent bank.',
+    body: 'Your standard positions go into the analysis itself, so a term that crosses your stated dealbreaker is graded High. The position and your pre-drafted response then carry through to the table and the exported report.',
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
     ),
@@ -853,7 +853,7 @@ const FEATURES = [
   {
     accent: 'orange',
     title: 'Whole matters, not single files',
-    body: 'Upload everything on both sides at once. Deviate pairs the documents and analyses the batch together, then reports on the matter as a whole.',
+    body: 'Upload everything on both sides at once. Deviate pairs the documents, works through them in small batches so results land as they finish, then reports on the matter as a whole.',
     icon: (
       <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.776c.112-.017.227-.026.344-.026h15.812c.117 0 .232.009.344.026m-16.5 0a2.25 2.25 0 00-1.883 2.542l.857 6a2.25 2.25 0 002.227 1.932H19.05a2.25 2.25 0 002.227-1.932l.857-6a2.25 2.25 0 00-1.883-2.542m-16.5 0V6A2.25 2.25 0 016 3.75h3.879a1.5 1.5 0 011.06.44l2.122 2.12a1.5 1.5 0 001.06.44H18A2.25 2.25 0 0120.25 9v.776" />
     ),
@@ -903,24 +903,28 @@ const FAQS = [
     a: 'Deviate is designed for Indian corporate law documents including term sheets, NDAs, vendor agreements, shareholder agreements, employment contracts, and any other bilateral commercial agreements. It performs best on structured legal documents with clearly delineated clauses.',
   },
   {
+    q: 'How does Deviate compare the two documents?',
+    a: 'In two stages. First both documents are split into clauses and lined up against each other, and every clause that is identical on both sides is set aside. What is left — the clauses that changed, the ones that only appear in the draft, and the ones that have gone missing — is what the AI reads. Working on the changes rather than the whole contract keeps the review focused on long documents. Where a document has no detectable clause structure, Deviate falls back to reading both in full.',
+  },
+  {
     q: 'How accurate is the AI analysis?',
-    a: 'Deviate is trained to identify material deviations in standard Indian corporate law clause types. It is highly accurate for common clauses such as indemnity, limitation of liability, non-compete, governing law, and dispute resolution. All output should be reviewed by a qualified legal professional before reliance. Deviate is a tool to accelerate review, not replace it.',
+    a: 'Deviate is built for Indian corporate law and is most reliable on the clause types that decide negotiations: indemnity, limitation of liability, restraints of trade, governing law, dispute resolution, data protection and the like. It is not restricted to a fixed list — any material deviation is reported, whatever kind of clause it sits in. Every finding carries a short verbatim quote from each document so you can check it against the source. All output must be reviewed by a qualified legal professional before reliance. Deviate accelerates review, it does not replace it.',
   },
   {
     q: 'What is the Playbook and how do I configure it?',
-    a: 'The Playbook is your firm’s internal library of standard positions on common clause types. For each clause type you define your preferred position, what constitutes a dealbreaker, and suggested negotiation language. When Deviate identifies a deviation it matches the clause against your Playbook and surfaces the relevant position and response automatically.',
+    a: 'The Playbook is your firm’s internal library of standard positions on common clause types. For each one you define your preferred position, what constitutes a dealbreaker, and suggested negotiation language. Those positions are sent into the analysis alongside the clause they cover, so risk is weighed against your firm’s stance — a term that crosses a stated dealbreaker is graded High. The position and response then appear in the findings table and in the exported report.',
   },
   {
     q: 'Are my documents stored or shared?',
-    a: 'Documents are processed in memory during analysis and are not stored on Deviate’s servers. Saved reviews are stored locally in your browser and are not accessible to any other user or device. For matters involving highly sensitive documents, review your firm’s data handling policies before use.',
+    a: 'Deviate stores nothing on its servers. Document text is held in memory for the length of the analysis and sent to our AI provider to perform it; it is not retained by Deviate afterwards. Saved reviews live in your browser and keep only the findings, filenames and counts — the document text is not saved. For highly sensitive matters, check your firm’s data handling and outsourcing policies before use.',
   },
   {
     q: 'Can I analyse multiple document pairs at once?',
-    a: 'Yes. Upload multiple firm documents and multiple counterparty documents simultaneously. In the pairing step each firm document is matched to its counterparty version, all confirmed pairs are analysed in a single batch, and the results are presented together.',
+    a: 'Yes. Upload multiple firm documents and multiple counterparty documents simultaneously. In the pairing step each firm document is matched to its counterparty version, confirmed pairs are analysed in small batches so results appear as they finish, and the findings are presented together. A pair that fails says so on its own row rather than taking the run down with it.',
   },
   {
     q: 'What do the risk levels mean?',
-    a: 'High risk indicates a deviation with significant potential commercial or legal consequence. Medium risk covers deviations that are meaningful but negotiable. Low risk covers minor variations unlikely to materially affect the transaction. Risk levels are assigned from the nature of the clause and the extent of the change.',
+    a: 'High risk means money at stake without a limit, the loss of a protection you negotiated, or a problem with enforceability — an unlimited indemnity, a deleted liability cap, an arbitration seat moved out of India. Medium is materially worse but bounded and negotiable. Low covers drafting and administrative changes. Ratings follow guidance written for Indian contract law, and your Playbook dealbreakers where you have set them.',
   },
 ]
 
@@ -1305,7 +1309,7 @@ export default function Landing() {
                 </Reveal>
                 <Reveal delay={190} y={14}>
                 <p className={`mt-5 text-base leading-relaxed ${tc.textSec}`}>
-                  The Playbook is a library of your firm&apos;s standard stance on each clause type. When an analysis turns up a deviation in a clause you have configured, the findings table fills in two columns on its own: what your firm&apos;s position is, and the negotiation language to send back.
+                  The Playbook is a library of your firm&apos;s standard stance on each clause type. It is not just a lookup table for the results screen: the position you set for a clause is sent to the analysis with that clause, so risk is graded against your firm&apos;s stance rather than a generic one. Findings then carry your position and your negotiation language through to the table and the Word report.
                 </p>
                 </Reveal>
 
@@ -1313,7 +1317,7 @@ export default function Landing() {
                   {[
                     { label: 'Clause type', color: '#1DB954', desc: 'The clause name Deviate matches deviations against — Indemnity, Non-Compete, Governing Law.' },
                     { label: 'Preferred position', color: 'var(--text-secondary)', desc: 'What your firm would insist on in a negotiation on this clause.' },
-                    { label: 'Dealbreaker', color: '#FF4444', desc: 'Formulations that are categorically unacceptable, surfaced as a flag during analysis.' },
+                    { label: 'Dealbreaker', color: '#FF4444', desc: 'Formulations that are categorically unacceptable. A draft term that crosses one is graded High risk.' },
                     { label: 'Suggested response', color: '#FF6719', desc: 'Pre-drafted pushback language, copied straight into the reply to opposing counsel.' },
                   ].map((row, i) => (
                     <Reveal key={row.label} delay={260 + i * 90} x={-14} y={0} duration={520}>
